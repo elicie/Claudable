@@ -11,6 +11,7 @@ import fs from 'fs/promises';
 import { requireCurrentUser } from '@/lib/services/auth';
 import { getProjectForUser } from '@/lib/services/project';
 import { provisionProjectDatabase } from '@/lib/services/internal-postgres';
+import { deployProjectApp } from '@/lib/services/deployment';
 
 interface RouteContext {
   params: Promise<{ project_id: string }>;
@@ -54,6 +55,8 @@ export async function POST(_request: NextRequest, { params }: RouteContext) {
     const nextEnv = lines.join('\n') + '\n';
     await fs.writeFile(envPath, nextEnv, 'utf8');
 
+    const deployment = await deployProjectApp(project_id);
+
     return NextResponse.json({
       success: true,
       data: {
@@ -63,6 +66,12 @@ export async function POST(_request: NextRequest, { params }: RouteContext) {
           name: dbInfo.databaseName,
           username: dbInfo.username,
           hasPassword: true,
+        },
+        deployment: {
+          subdomain: deployment.subdomain,
+          port: deployment.port,
+          status: deployment.status,
+          internalUrl: deployment.url,
         },
         envPath,
       },
@@ -82,4 +91,3 @@ export async function POST(_request: NextRequest, { params }: RouteContext) {
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-

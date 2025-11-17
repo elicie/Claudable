@@ -278,6 +278,24 @@ model UserRequest {
   @@map("user_requests")
 }
 
+model ProjectDeployment {
+  id        String   @id @default(cuid())
+  projectId String   @map("project_id")
+
+  subdomain String
+  port      Int
+  status    String   @default("running") // running, stopped, error
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@unique([projectId])
+  @@map("project_deployments")
+}
+
 // ============================================================
 // Service Tokens (Local Development Only)
 // ============================================================
