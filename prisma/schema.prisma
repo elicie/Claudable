@@ -14,6 +14,21 @@ datasource db {
 // Core Models
 // ============================================================
 
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  passwordHash  String   @map("password_hash")
+
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  projects      Project[]
+
+  @@map("users")
+}
+
 model Project {
   id          String   @id @default(cuid())
   name        String
@@ -40,6 +55,9 @@ model Project {
   selectedModel String? @map("selected_model") // claude model id (claude-opus-4-1-20250805 | claude-sonnet-4-5-20250929 | claude-haiku-4-5-20251001)
   fallbackEnabled Boolean @default(false) @map("fallback_enabled")
 
+  // Ownership
+  ownerId     String?  @map("owner_id")
+
   // Settings (JSON)
   settings    String? // JSON string for additional settings
 
@@ -49,6 +67,7 @@ model Project {
   lastActiveAt DateTime @default(now()) @map("last_active_at")
 
   // Relations
+  owner                 User?    @relation(fields: [ownerId], references: [id])
   messages              Message[]
   sessions              Session[]
   envVars               EnvVar[]
@@ -58,6 +77,7 @@ model Project {
   userRequests          UserRequest[]
 
   @@map("projects")
+  @@index([ownerId, createdAt])
 }
 
 model Message {

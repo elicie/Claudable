@@ -3,10 +3,14 @@ import { useState } from 'react';
 import ProjectSettings from '@/components/settings/ProjectSettings';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Header() {
   const [globalSettingsOpen, setGlobalSettingsOpen] = useState(false);
   const pathname = usePathname() ?? '';
+  const router = useRouter();
+  const { user, logout } = useAuth();
 
   // Extract project ID from pathname if we're in a project page
   const projectId = pathname.match(/^\/([^\/]+)\/(chat|page)?$/)?.[1];
@@ -51,6 +55,36 @@ export default function Header() {
             <nav className="flex items-center gap-3" />
           </div>
           <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              {user ? (
+                <>
+                  <span className="text-sm text-gray-600 max-w-[160px] truncate">
+                    {user.email}
+                  </span>
+                  <button
+                    onClick={() => logout().then(() => router.push('/login'))}
+                    className="text-sm px-3 py-1 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    로그아웃
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => router.push('/login')}
+                    className="text-sm px-3 py-1 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    로그인
+                  </button>
+                  <button
+                    onClick={() => router.push('/signup')}
+                    className="text-sm px-3 py-1 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+                  >
+                    회원가입
+                  </button>
+                </>
+              )}
+            </div>
             {/* Global settings */}
             <button
               className="flex items-center justify-center w-10 h-10 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-all duration-200"

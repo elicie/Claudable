@@ -28,12 +28,41 @@ export async function getAllProjects(): Promise<Project[]> {
   })) as Project[];
 }
 
+export async function getProjectsForUser(userId: string): Promise<Project[]> {
+  const projects = await prisma.project.findMany({
+    where: {
+      ownerId: userId,
+    },
+    orderBy: {
+      lastActiveAt: 'desc',
+    },
+  });
+  return projects.map(project => ({
+    ...project,
+    selectedModel: normalizeModelId(project.preferredCli ?? 'claude', project.selectedModel ?? undefined),
+  })) as Project[];
+}
+
 /**
  * Retrieve project by ID
  */
 export async function getProjectById(id: string): Promise<Project | null> {
   const project = await prisma.project.findUnique({
     where: { id },
+  });
+  if (!project) return null;
+  return {
+    ...project,
+    selectedModel: normalizeModelId(project.preferredCli ?? 'claude', project.selectedModel ?? undefined),
+  } as Project;
+}
+
+export async function getProjectForUser(id: string, userId: string): Promise<Project | null> {
+  const project = await prisma.project.findFirst({
+    where: {
+      id,
+      ownerId: userId,
+    },
   });
   if (!project) return null;
   return {
@@ -69,6 +98,41 @@ export async function createProject(input: CreateProjectInput): Promise<Project>
   });
 
   console.log(`[ProjectService] Created project: ${project.id}`);
+  return {
+    ...project,
+    selectedModel: normalizeModelId(project.preferredCli ?? 'claude', project.selectedModel ?? undefined),
+  } as Project;
+}
+
+export async function createProjectForUser(
+  userId: string,
+  input: CreateProjectInput,
+): Promise<Project> {
+  const projectPath = path.join(PROJECTS_DIR_ABSOLUTE, input.project_id);
+  await fs.mkdir(projectPath, { recursive: true });
+
+  const project = await prisma.project.create({
+    data: {
+      id: input.project_id,
+      name: input.name,
+      description: input.description,
+      initialPrompt: input.initialPrompt,
+      repoPath: projectPath,
+      preferredCli: input.preferredCli || 'claude',
+      selectedModel: normalizeModelId(
+        input.preferredCli || 'claude',
+        input.selectedModel ?? getDefaultModelForCli(input.preferredCli || 'claude'),
+      ),
+      status: 'idle',
+      templateType: 'nextjs',
+      lastActiveAt: new Date(),
+      previewUrl: null,
+      previewPort: null,
+      ownerId: userId,
+    },
+  });
+
+  console.log(`[ProjectService] Created project for user ${userId}: ${project.id}`);
   return {
     ...project,
     selectedModel: normalizeModelId(project.preferredCli ?? 'claude', project.selectedModel ?? undefined),

@@ -5,11 +5,12 @@
  */
 
 import { NextRequest } from 'next/server';
-import { getAllProjects, createProject } from '@/lib/services/project';
+import { getProjectsForUser, createProjectForUser } from '@/lib/services/project';
 import type { CreateProjectInput } from '@/types/backend';
 import { serializeProjects, serializeProject } from '@/lib/serializers/project';
 import { getDefaultModelForCli, normalizeModelId } from '@/lib/constants/cliModels';
 import { createSuccessResponse, createErrorResponse, handleApiError } from '@/lib/utils/api-response';
+import { requireCurrentUser } from '@/lib/services/auth';
 
 /**
  * GET /api/projects
@@ -17,7 +18,8 @@ import { createSuccessResponse, createErrorResponse, handleApiError } from '@/li
  */
 export async function GET() {
   try {
-    const projects = await getAllProjects();
+    const user = await requireCurrentUser();
+    const projects = await getProjectsForUser(user.id);
     return createSuccessResponse(serializeProjects(projects));
   } catch (error) {
     return handleApiError(error, 'API', 'Failed to fetch projects');
@@ -30,6 +32,7 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
+    const user = await requireCurrentUser();
     const body = await request.json();
     const preferredCli = String(body.preferredCli || body.preferred_cli || 'claude').toLowerCase();
     const requestedModel = body.selectedModel || body.selected_model;
@@ -48,7 +51,7 @@ export async function POST(request: NextRequest) {
       return createErrorResponse('project_id and name are required', undefined, 400);
     }
 
-    const project = await createProject(input);
+    const project = await createProjectForUser(user.id, input);
     return createSuccessResponse(serializeProject(project), 201);
   } catch (error) {
     return handleApiError(error, 'API', 'Failed to create project');

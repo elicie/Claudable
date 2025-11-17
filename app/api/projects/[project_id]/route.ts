@@ -7,12 +7,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  getProjectById,
+  getProjectForUser,
   updateProject,
   deleteProject,
 } from '@/lib/services/project';
 import type { UpdateProjectInput } from '@/types/backend';
 import { serializeProject } from '@/lib/serializers/project';
+import { requireCurrentUser } from '@/lib/services/auth';
 
 interface RouteContext {
   params: Promise<{ project_id: string }>;
@@ -27,8 +28,9 @@ export async function GET(
   { params }: RouteContext
 ) {
   try {
+    const user = await requireCurrentUser();
     const { project_id } = await params;
-    const project = await getProjectById(project_id);
+    const project = await getProjectForUser(project_id, user.id);
 
     if (!project) {
       return NextResponse.json(
@@ -60,6 +62,7 @@ export async function PUT(
   { params }: RouteContext
 ) {
   try {
+    const user = await requireCurrentUser();
     const { project_id } = await params;
     const body = await request.json();
 
@@ -74,8 +77,16 @@ export async function PUT(
       settings: body.settings,
     };
 
-    const project = await updateProject(project_id, input);
-    return NextResponse.json({ success: true, data: serializeProject(project) });
+    const project = await getProjectForUser(project_id, user.id);
+    if (!project) {
+      return NextResponse.json(
+        { success: false, error: 'Project not found' },
+        { status: 404 },
+      );
+    }
+
+    const updated = await updateProject(project_id, input);
+    return NextResponse.json({ success: true, data: serializeProject(updated) });
   } catch (error) {
     console.error('[API] Failed to update project:', error);
 
@@ -115,7 +126,16 @@ export async function DELETE(
   { params }: RouteContext
 ) {
   try {
+    const user = await requireCurrentUser();
     const { project_id } = await params;
+    const project = await getProjectForUser(project_id, user.id);
+    if (!project) {
+      return NextResponse.json(
+        { success: false, error: 'Project not found' },
+        { status: 404 },
+      );
+    }
+
     await deleteProject(project_id);
 
     return NextResponse.json({
