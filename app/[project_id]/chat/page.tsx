@@ -255,6 +255,7 @@ export default function ChatPage() {
   const [publishLoading, setPublishLoading] = useState(false);
   const [githubConnected, setGithubConnected] = useState<boolean | null>(null);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
+  const [deploymentStatus, setDeploymentStatus] = useState<'idle' | 'deploying' | 'ready' | 'error'>('idle');
   const [isStartingPreview, setIsStartingPreview] = useState(false);
   const [previewInitializationMessage, setPreviewInitializationMessage] = useState('Starting development server...');
   const [cliStatuses, setCliStatuses] = useState<Record<string, CliStatusSnapshot>>({});
