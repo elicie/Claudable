@@ -60,7 +60,6 @@ This phase introduces **per-project Postgres databases** that are created **at d
 
 - [ ] Identify deployment API endpoint
   - [ ] e.g. `POST /api/projects/[project_id]/deploy`
-  - [ ] Or extend existing Vercel deploy routes for self-hosted deployment pathway
 - [ ] Integrate provisioning into deployment flow
   - [ ] On deploy:
     - [ ] Ensure caller owns the project
@@ -98,4 +97,3 @@ When this phase is complete, we have:
 - Automatic internal Postgres DB creation at deploy time
 - Stable `DATABASE_URL` per project
 - Prepared ground for hosting the app with a real production DB
-

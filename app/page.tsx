@@ -39,8 +39,14 @@ const assistantBrandColors = ACTIVE_CLI_BRAND_COLORS;
 
 const MODEL_OPTIONS_BY_ASSISTANT = ACTIVE_CLI_MODEL_OPTIONS;
 
+type ProjectDeploymentInfo = {
+  status: string;
+  externalUrl: string | null;
+};
+
 export default function HomePage() {
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
+  const [deploymentInfo, setDeploymentInfo] = useState<Record<string, ProjectDeploymentInfo>>({});
   const [showCreate, setShowCreate] = useState(false);
   const [showGlobalSettings, setShowGlobalSettings] = useState(false);
   const [globalSettingsTab, setGlobalSettingsTab] = useState<'general' | 'ai-assistant'>('ai-assistant');
@@ -303,6 +309,42 @@ export default function HomePage() {
       });
 
       setProjects(sortedProjects);
+      // Best-effort load of deployment info for each project
+      try {
+        const entries = await Promise.all(
+          sortedProjects.map(async (project) => {
+            try {
+              const res = await fetchAPI(`${API_BASE}/api/projects/${project.id}/deployment`);
+              if (!res.ok) {
+                return [project.id, null] as const;
+              }
+              const payload = await res.json().catch(() => null);
+              const data = (payload && typeof payload === 'object') ? (payload.data ?? payload) : null;
+              if (!data || typeof data !== 'object') {
+                return [project.id, null] as const;
+              }
+              const status = typeof (data as any).status === 'string' ? (data as any).status : 'idle';
+              const externalUrl =
+                typeof (data as any).externalUrl === 'string' ? (data as any).externalUrl : null;
+              return [project.id, { status, externalUrl }] as const;
+            } catch (error) {
+              console.warn('Failed to load deployment info for project', project.id, error);
+              return [project.id, null] as const;
+            }
+          }),
+        );
+
+        const map: Record<string, ProjectDeploymentInfo> = {};
+        for (const [projectId, info] of entries) {
+          if (info) {
+            map[projectId] = info;
+          }
+        }
+        setDeploymentInfo(map);
+      } catch (error) {
+        console.warn('Failed to load deployment info:', error);
+        setDeploymentInfo({});
+      }
     } catch (error) {
       console.warn('Failed to load projects:', error);
       setProjects([]);
@@ -339,7 +381,26 @@ export default function HomePage() {
         return;
       }
       const payload = await response.json().catch(() => null);
-      const externalUrl = payload?.data?.deployment?.externalUrl as string | undefined;
+      const deployment = payload?.data?.deployment;
+      const externalUrl =
+        deployment && typeof deployment.externalUrl === 'string'
+          ? (deployment.externalUrl as string)
+          : undefined;
+      const status =
+        deployment && typeof deployment.status === 'string'
+          ? (deployment.status as string)
+          : undefined;
+
+      if (status) {
+        setDeploymentInfo((prev) => ({
+          ...prev,
+          [projectId]: {
+            status,
+            externalUrl: externalUrl ?? null,
+          },
+        }));
+      }
+
       if (externalUrl) {
         showToast('Project deployed. Opening live app...', 'success');
         window.open(externalUrl, '_blank');
@@ -858,7 +919,7 @@ export default function HomePage() {
                               }
                             </span>
                           </h3>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
                             <div className="text-gray-500 text-xs">
                               {formatTime(project.lastMessageAt || project.createdAt)}
                             </div>
@@ -874,6 +935,22 @@ export default function HomePage() {
                                   {formatCliInfo(projectCli, project.selectedModel ?? undefined)}
                                 </span>
                               </div>
+                            )}
+                            {deploymentInfo[project.id]?.externalUrl && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const url = deploymentInfo[project.id]?.externalUrl;
+                                  if (url) {
+                                    window.open(url, '_blank');
+                                  }
+                                }}
+                                className="inline-flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-700 hover:underline"
+                              >
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                <span>Live app</span>
+                              </button>
                             )}
                           </div>
                         </div>

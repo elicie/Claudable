@@ -29,7 +29,7 @@ We conceptually split the system into three planes:
   - Integration with:
     - Claude Code (`@anthropic-ai/claude-agent-sdk` + `claude` CLI)
     - Codex CLI
-    - Optional external services (GitHub, Vercel, Supabase) – can be disabled for pure self‑host
+    - Optional external services (GitHub) – designed for pure self‑host without Vercel/Supabase
   - Internal Postgres provisioning (per‑project DB)
   - App deployment & routing metadata:
     - Which project is deployed?
@@ -299,4 +299,3 @@ This design gives us:
 - A small **self‑hosted "mini Vercel + mini Supabase"** on top of Claudable.
 - Clean separation between control plane, data plane, and app execution.
 - A path to start with minimal features (no DB UI, simple auth) and gradually add more advanced management and visibility as needed.
-

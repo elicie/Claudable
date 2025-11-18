@@ -59,7 +59,7 @@ This phase introduces **real users** and **per-user projects** so that later pha
 - [ ] Update existing APIs to use the new helpers
   - [ ] Chat/act route
   - [ ] Preview routes
-  - [ ] Service integration routes (GitHub/Vercel/Supabase) – at least enforce ownership
+  - [ ] Service integration routes (GitHub only) – at least enforce ownership
 
 ---
 
@@ -93,4 +93,3 @@ When this phase is complete, we have:
 - Real users, login, and per-user projects
 - All project operations scoped by owner
 - A solid foundation to attach per-project Postgres DBs and hosted apps in later phases
-

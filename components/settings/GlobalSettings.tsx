@@ -681,7 +681,7 @@ export default function GlobalSettings({ isOpen, onClose, initialTab = 'general'
                             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                           )}
                           <button
-                            onClick={() => handleServiceClick(provider as 'github' | 'supabase' | 'vercel')}
+                            onClick={() => handleServiceClick('github')}
                             className="px-3 py-1.5 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-all"
                           >
                             {token ? 'Update Token' : 'Add Token'}

@@ -32,7 +32,7 @@
 
 ## What is Claudable?
 
-Claudable is a powerful Next.js-based web app builder that combines **C**laude Code's (Cursor CLI also supported!) advanced AI agent capabilities with **Lovable**'s simple and intuitive app building experience. Just describe your app idea - "I want a task management app with dark mode" - and watch as Claudable instantly generates the code and shows you a live preview of your working app. You can deploy your app to Vercel and integrate database with Supabase for free.
+Claudable is a powerful Next.js-based web app builder that combines **C**laude Code's (Cursor CLI also supported!) advanced AI agent capabilities with **Lovable**'s simple and intuitive app building experience. Just describe your app idea - "I want a task management app with dark mode" - and watch as Claudable instantly generates the code and shows you a live preview of your working app. You can deploy your app on your own infrastructure with per-project PostgreSQL databases provisioned automatically.
 
 This open-source project empowers you to build and deploy professional web applications easily for **free**.
 
@@ -53,9 +53,8 @@ How to start? Simply login to Claude Code (or Cursor CLI), start Claudable, and 
 - **Instant Preview**: See your changes immediately with hot-reload as AI builds your app
 - **Zero Setup, Instant Launch**: No complex sandboxes, no API key, no database headaches - just start building immediately
 - **Beautiful UI**: Generate beautiful UI with Tailwind CSS and shadcn/ui
-- **Deploy to Vercel**: Push your app live with a single click, no configuration needed
 - **GitHub Integration**: Automatic version control and continuous deployment setup
-- **Supabase Database**: Connect production PostgreSQL with authentication ready to use
+- **Self-hosted Deployment**: Built-in deployment manager and per-project PostgreSQL databases on your own servers
 - **Desktop App**: Available as Electron desktop application for Mac, Windows, and Linux
 
 ## Supported AI Coding Agents
@@ -122,8 +121,8 @@ Claudable supports multiple AI coding agents, giving you the flexibility to choo
 ## Technology Stack
 
 **Database & Deployment:**
-- **[Supabase](https://supabase.com/)**: Connect production-ready PostgreSQL database directly to your project.
-- **[Vercel](https://vercel.com/)**: Publish your work immediately with one-click deployment
+- **Internal Postgres (self-hosted)**: Claudable provisions per-project PostgreSQL databases using an admin connection (`DB_ADMIN_URL`).
+- **Self-hosted app hosting**: Built-in deployment manager runs your generated Next.js apps on internal ports and exposes them via a wildcard domain (`APPS_BASE_DOMAIN`).
 
 **There is no additional subscription cost and built just for YOU.**
 
@@ -210,7 +209,7 @@ npm run clean       # Remove all dependencies
 2. **Describe Your Project**: Use natural language to describe what you want to build
 3. **AI Generation**: Watch as the AI generates your project structure and code
 4. **Live Preview**: See changes instantly with hot reload functionality
-5. **Deploy**: Push to production with Vercel integration
+5. **Deploy**: Push to production using the built-in self-hosted deployment manager
 
 ### Database Operations
 
@@ -257,17 +256,6 @@ If you encounter the error: `Error output dangerously skip permissions cannot be
 **Get Token:** [GitHub Personal Access Tokens](https://github.com/settings/tokens) → Generate new token (classic) → Select `repo` scope
 
 **Connect:** Settings → Service Integrations → GitHub → Enter token → Create or connect repository
-
-### Vercel  
-**Get Token:** [Vercel Account Settings](https://vercel.com/account/tokens) → Create Token
-
-**Connect:** Settings → Service Integrations → Vercel → Enter token → Create new project for deployment
-
-### Supabase
-**Get Credentials:** [Supabase Dashboard](https://supabase.com/dashboard) → Your Project → Settings → API
-- Project URL: `https://xxxxx.supabase.co`  
-- Anon Key: Public key for client-side
-- Service Role Key: Secret key for server-side
 
 
 ## License
