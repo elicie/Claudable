@@ -329,6 +329,22 @@ export default function HomePage() {
     }
   }
 
+  async function deploy(projectId: string) {
+    try {
+      const response = await fetchAPI(`${API_BASE}/api/projects/${projectId}/deploy`, { method: 'POST' });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        console.error('Failed to deploy project:', payload);
+        showToast('Failed to deploy project', 'error');
+        return;
+      }
+      showToast('Project deployment started', 'success');
+    } catch (error) {
+      console.warn('Failed to deploy project:', error);
+      showToast('Failed to deploy project. Please try again.', 'error');
+    }
+  }
+
   const showToast = useCallback((message: string, type: 'success' | 'error') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
@@ -855,6 +871,18 @@ export default function HomePage() {
                           </div>
                         </div>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deploy(project.id);
+                            }}
+                            className="p-1 text-gray-400 hover:text-green-600 transition-colors"
+                            title="Deploy project"
+                          >
+                            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                              <path d="M5 12h4l1 9L19 3 5 10z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </button>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();

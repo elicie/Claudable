@@ -5,6 +5,8 @@
 
 import { NextResponse } from 'next/server';
 import { previewManager } from '@/lib/services/preview';
+import { requireCurrentUser } from '@/lib/services/auth';
+import { getProjectForUser } from '@/lib/services/project';
 
 interface RouteContext {
   params: Promise<{ project_id: string }>;
@@ -15,7 +17,15 @@ export async function GET(
   { params }: RouteContext
 ) {
   try {
+    const user = await requireCurrentUser();
     const { project_id } = await params;
+    const project = await getProjectForUser(project_id, user.id);
+    if (!project) {
+      return NextResponse.json(
+        { success: false, error: 'Project not found' },
+        { status: 404 },
+      );
+    }
     const preview = previewManager.getStatus(project_id);
 
     return NextResponse.json({

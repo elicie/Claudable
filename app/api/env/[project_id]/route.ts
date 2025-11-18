@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { listEnvVars, createEnvVar } from '@/lib/services/env';
+import { requireCurrentUser } from '@/lib/services/auth';
+import { getProjectForUser } from '@/lib/services/project';
 
 interface RouteContext {
   params: Promise<{ project_id: string }>;
@@ -7,7 +9,15 @@ interface RouteContext {
 
 export async function GET(_request: NextRequest, { params }: RouteContext) {
   try {
+    const user = await requireCurrentUser();
     const { project_id } = await params;
+    const project = await getProjectForUser(project_id, user.id);
+    if (!project) {
+      return NextResponse.json(
+        { success: false, error: 'Project not found' },
+        { status: 404 },
+      );
+    }
     const envVars = await listEnvVars(project_id);
     return NextResponse.json(envVars);
   } catch (error) {
@@ -25,7 +35,15 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
 
 export async function POST(request: NextRequest, { params }: RouteContext) {
   try {
+    const user = await requireCurrentUser();
     const { project_id } = await params;
+    const project = await getProjectForUser(project_id, user.id);
+    if (!project) {
+      return NextResponse.json(
+        { success: false, error: 'Project not found' },
+        { status: 404 },
+      );
+    }
     const body = await request.json();
     if (!body?.key || typeof body.key !== 'string') {
       return NextResponse.json(

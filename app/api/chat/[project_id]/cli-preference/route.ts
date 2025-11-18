@@ -2,14 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   getProjectCliPreference,
   updateProjectCliPreference,
+  getProjectForUser,
 } from '@/lib/services/project';
+import { requireCurrentUser } from '@/lib/services/auth';
 
 interface RouteContext {
   params: Promise<{ project_id: string }>;
 }
 
 export async function GET(_request: NextRequest, { params }: RouteContext) {
+  const user = await requireCurrentUser();
   const { project_id } = await params;
+  const project = await getProjectForUser(project_id, user.id);
+  if (!project) {
+    return NextResponse.json(
+      { success: false, error: 'Project not found' },
+      { status: 404 },
+    );
+  }
   const preference = await getProjectCliPreference(project_id);
   if (!preference) {
     return NextResponse.json(
@@ -23,7 +33,15 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
 
 export async function POST(request: NextRequest, { params }: RouteContext) {
   try {
+    const user = await requireCurrentUser();
     const { project_id } = await params;
+    const project = await getProjectForUser(project_id, user.id);
+    if (!project) {
+      return NextResponse.json(
+        { success: false, error: 'Project not found' },
+        { status: 404 },
+      );
+    }
     const body = await request.json();
     if (!body || typeof body !== 'object') {
       return NextResponse.json(

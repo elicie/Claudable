@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { AuthRequiredError } from '@/lib/services/auth';
 
 /**
  * Standard API response utilities for consistent error handling and responses
@@ -49,7 +50,9 @@ export function handleApiError(
 
   // Determine appropriate status code based on error type
   let status = 500;
-  if (error instanceof Error) {
+  if (error instanceof AuthRequiredError) {
+    status = 401;
+  } else if (error instanceof Error) {
     if (message.includes('not found') || message.includes('Not found')) {
       status = 404;
     } else if (

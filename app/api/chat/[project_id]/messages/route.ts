@@ -7,6 +7,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getMessagesByProjectId, createMessage, deleteMessagesByProjectId, getMessagesCountByProjectId } from '@/lib/services/message';
 import type { CreateMessageInput } from '@/types/backend';
 import { serializeMessages, serializeMessage } from '@/lib/serializers/chat';
+import { requireCurrentUser } from '@/lib/services/auth';
+import { getProjectForUser } from '@/lib/services/project';
 
 interface RouteContext {
   params: Promise<{ project_id: string }>;
@@ -21,7 +23,15 @@ export async function GET(
   { params }: RouteContext
 ) {
   try {
+    const user = await requireCurrentUser();
     const { project_id } = await params;
+    const project = await getProjectForUser(project_id, user.id);
+    if (!project) {
+      return NextResponse.json(
+        { success: false, error: 'Project not found' },
+        { status: 404 },
+      );
+    }
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
@@ -67,7 +77,15 @@ export async function POST(
   { params }: RouteContext
 ) {
   try {
+    const user = await requireCurrentUser();
     const { project_id } = await params;
+    const project = await getProjectForUser(project_id, user.id);
+    if (!project) {
+      return NextResponse.json(
+        { success: false, error: 'Project not found' },
+        { status: 404 },
+      );
+    }
     const payload = await request.json();
 
     const content =

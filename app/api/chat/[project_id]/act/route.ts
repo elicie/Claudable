@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  getProjectById,
+  getProjectForUser,
   updateProject,
   updateProjectActivity,
 } from '@/lib/services/project';
@@ -28,6 +28,7 @@ import {
   upsertUserRequest,
   markUserRequestAsProcessing,
 } from '@/lib/services/user-requests';
+import { requireCurrentUser } from '@/lib/services/auth';
 
 interface RouteContext {
   params: Promise<{ project_id: string }>;
@@ -230,12 +231,13 @@ async function normalizeImageAttachment(
  */
 export async function POST(request: NextRequest, { params }: RouteContext) {
   try {
+    const user = await requireCurrentUser();
     const { project_id } = await params;
     const rawBody = await request.json().catch(() => ({}));
     const body = (rawBody && typeof rawBody === 'object' ? rawBody : {}) as ChatActRequest &
       Record<string, unknown>;
 
-    const project = await getProjectById(project_id);
+    const project = await getProjectForUser(project_id, user.id);
     if (!project) {
       return NextResponse.json(
         { success: false, error: 'Project not found' },

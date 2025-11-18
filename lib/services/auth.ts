@@ -5,6 +5,13 @@ import { prisma } from '@/lib/db/client';
 
 const scrypt = promisify(_scrypt);
 
+export class AuthRequiredError extends Error {
+  constructor(message = 'Authentication required') {
+    super(message);
+    this.name = 'AuthRequiredError';
+  }
+}
+
 const SESSION_COOKIE_NAME = 'claudable_session';
 const SESSION_TTL_DAYS = 7;
 
@@ -144,8 +151,7 @@ export async function getCurrentUser() {
 export async function requireCurrentUser() {
   const user = await getCurrentUser();
   if (!user) {
-    throw new Error('AUTH_REQUIRED');
+    throw new AuthRequiredError();
   }
   return user;
 }
-

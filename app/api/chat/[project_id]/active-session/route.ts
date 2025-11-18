@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getActiveSession } from '@/lib/services/chat-sessions';
+import { requireCurrentUser } from '@/lib/services/auth';
+import { getProjectForUser } from '@/lib/services/project';
 
 interface RouteContext {
   params: Promise<{ project_id: string }>;
@@ -7,7 +9,15 @@ interface RouteContext {
 
 export async function GET(_request: Request, { params }: RouteContext) {
   try {
+    const user = await requireCurrentUser();
     const { project_id } = await params;
+    const project = await getProjectForUser(project_id, user.id);
+    if (!project) {
+      return NextResponse.json(
+        { success: false, data: null },
+        { status: 404 },
+      );
+    }
     const session = await getActiveSession(project_id);
 
     // Return 200 with null data when no session exists (successful query, no results)

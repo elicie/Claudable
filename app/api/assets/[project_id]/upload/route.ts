@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import { randomUUID } from 'crypto';
-import { getProjectById } from '@/lib/services/project';
+import { getProjectForUser } from '@/lib/services/project';
+import { requireCurrentUser } from '@/lib/services/auth';
 
 interface RouteContext {
   params: Promise<{ project_id: string }>;
@@ -19,8 +20,9 @@ function resolveAssetsPath(projectId: string): string {
 
 export async function POST(request: Request, { params }: RouteContext) {
   try {
+    const user = await requireCurrentUser();
     const { project_id } = await params;
-    const project = await getProjectById(project_id);
+    const project = await getProjectForUser(project_id, user.id);
     if (!project) {
       return NextResponse.json({ success: false, error: 'Project not found' }, { status: 404 });
     }

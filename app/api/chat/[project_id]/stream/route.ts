@@ -5,6 +5,8 @@
 
 import { NextRequest } from 'next/server';
 import { streamManager } from '@/lib/services/stream';
+import { requireCurrentUser } from '@/lib/services/auth';
+import { getProjectForUser } from '@/lib/services/project';
 
 interface RouteContext {
   params: Promise<{ project_id: string }>;
@@ -18,7 +20,17 @@ export async function GET(
   request: NextRequest,
   { params }: RouteContext
 ) {
+  const user = await requireCurrentUser();
   const { project_id } = await params;
+  const project = await getProjectForUser(project_id, user.id);
+  if (!project) {
+    return new Response(JSON.stringify({ success: false, error: 'Project not found' }), {
+      status: 404,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  }
 
   // Create ReadableStream
   const stream = new ReadableStream({

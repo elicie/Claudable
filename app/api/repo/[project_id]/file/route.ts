@@ -9,6 +9,8 @@ import {
   writeProjectFileContent,
   FileBrowserError,
 } from '@/lib/services/file-browser';
+import { requireCurrentUser } from '@/lib/services/auth';
+import { getProjectForUser } from '@/lib/services/project';
 
 interface RouteContext {
   params: Promise<{ project_id: string }>;
@@ -16,7 +18,15 @@ interface RouteContext {
 
 export async function GET(request: NextRequest, { params }: RouteContext) {
   try {
+    const user = await requireCurrentUser();
     const { project_id } = await params;
+    const project = await getProjectForUser(project_id, user.id);
+    if (!project) {
+      return NextResponse.json(
+        { error: 'Project not found' },
+        { status: 404 },
+      );
+    }
     const { searchParams } = new URL(request.url);
     const path = searchParams.get('path');
 
@@ -49,7 +59,15 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
 
 export async function PUT(request: NextRequest, { params }: RouteContext) {
   try {
+    const user = await requireCurrentUser();
     const { project_id } = await params;
+    const project = await getProjectForUser(project_id, user.id);
+    if (!project) {
+      return NextResponse.json(
+        { error: 'Project not found' },
+        { status: 404 },
+      );
+    }
     const body = await request.json();
     const path = body?.path;
     const content = body?.content;

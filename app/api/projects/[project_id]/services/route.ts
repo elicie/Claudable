@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { listProjectServices } from '@/lib/services/project-services';
+import { requireCurrentUser } from '@/lib/services/auth';
+import { getProjectForUser } from '@/lib/services/project';
 
 interface RouteContext {
   params: Promise<{ project_id: string }>;
@@ -7,7 +9,15 @@ interface RouteContext {
 
 export async function GET(_request: Request, { params }: RouteContext) {
   try {
+    const user = await requireCurrentUser();
     const { project_id } = await params;
+    const project = await getProjectForUser(project_id, user.id);
+    if (!project) {
+      return NextResponse.json(
+        { success: false, error: 'Project not found' },
+        { status: 404 },
+      );
+    }
     const services = await listProjectServices(project_id);
     const payload = services.map((service) => ({
       ...service,

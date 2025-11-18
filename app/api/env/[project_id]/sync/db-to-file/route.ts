@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { syncDbToEnvFile } from '@/lib/services/env';
+import { requireCurrentUser } from '@/lib/services/auth';
+import { getProjectForUser } from '@/lib/services/project';
 
 interface RouteContext {
   params: Promise<{ project_id: string }>;
@@ -7,7 +9,15 @@ interface RouteContext {
 
 export async function POST(_request: Request, { params }: RouteContext) {
   try {
+    const user = await requireCurrentUser();
     const { project_id } = await params;
+    const project = await getProjectForUser(project_id, user.id);
+    if (!project) {
+      return NextResponse.json(
+        { success: false, error: 'Project not found' },
+        { status: 404 },
+      );
+    }
     const synced = await syncDbToEnvFile(project_id);
     return NextResponse.json({
       success: true,
