@@ -96,6 +96,22 @@ async function runCommand(
   });
 }
 
+const getDeployPortBounds = (): { start?: number; end?: number } => {
+  const startRaw = process.env.DEPLOY_PORT_START;
+  const endRaw = process.env.DEPLOY_PORT_END;
+
+  const toNumber = (value?: string): number | undefined => {
+    if (!value) return undefined;
+    const n = Number.parseInt(value, 10);
+    return Number.isInteger(n) ? n : undefined;
+  };
+
+  const start = toNumber(startRaw);
+  const end = toNumber(endRaw);
+
+  return { start, end };
+};
+
 export async function deployProjectApp(projectId: string): Promise<DeploymentInfo> {
   const project = await getProjectById(projectId);
   if (!project) {
@@ -119,8 +135,9 @@ export async function deployProjectApp(projectId: string): Promise<DeploymentInf
   // Build the project in production mode
   await runCommand(npmCommand, ['run', 'build'], projectPath, baseEnv, `${projectId}:build`);
 
-  // Choose a port for production server
-  const port = await findAvailablePort();
+  // Choose a port for production server (separate range from preview via DEPLOY_PORT_* if provided)
+  const bounds = getDeployPortBounds();
+  const port = await findAvailablePort(bounds.start, bounds.end);
   const internalUrl = `http://localhost:${port}`;
 
   const env: NodeJS.ProcessEnv = {
@@ -247,6 +264,43 @@ export async function getDeploymentForProject(projectId: string): Promise<Deploy
     subdomain: deployment.subdomain,
     port: deployment.port,
     status: deployment.status,
+    url: null,
+    externalUrl: buildExternalUrl(deployment.subdomain),
+  };
+}
+
+export async function stopProjectDeployment(projectId: string): Promise<DeploymentInfo | null> {
+  const existingProc = productionProcesses.get(projectId);
+  if (existingProc?.process) {
+    try {
+      existingProc.process.kill('SIGTERM');
+    } catch {
+      // ignore
+    }
+    productionProcesses.delete(projectId);
+  }
+
+  await updateProjectStatus(projectId, 'idle').catch((error) => {
+    console.error('[Deploy] Failed to update project status on stop:', error);
+  });
+
+  const deployment = await prisma.projectDeployment.findFirst({
+    where: { projectId },
+  });
+  if (!deployment) {
+    return null;
+  }
+
+  await prisma.projectDeployment.update({
+    where: { id: deployment.id },
+    data: { status: 'stopped' },
+  });
+
+  return {
+    projectId,
+    subdomain: deployment.subdomain,
+    port: deployment.port,
+    status: 'stopped',
     url: null,
     externalUrl: buildExternalUrl(deployment.subdomain),
   };
