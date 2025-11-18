@@ -108,11 +108,9 @@ interface ServiceToken {
 export default function GlobalSettings({ isOpen, onClose, initialTab = 'general' }: GlobalSettingsProps) {
   const [activeTab, setActiveTab] = useState<'general' | 'ai-agents' | 'services' | 'about'>(initialTab);
   const [serviceModalOpen, setServiceModalOpen] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState<'github' | 'supabase' | 'vercel' | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<'github' | null>(null);
   const [tokens, setTokens] = useState<{ [key: string]: ServiceToken | null }>({
     github: null,
-    supabase: null,
-    vercel: null
   });
   const [cliStatus, setCLIStatus] = useState<CLIStatus>({});
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -130,7 +128,7 @@ export default function GlobalSettings({ isOpen, onClose, initialTab = 'general'
   };
 
   const loadAllTokens = useCallback(async () => {
-    const providers = ['github', 'supabase', 'vercel'];
+    const providers = ['github'];
     const newTokens: { [key: string]: ServiceToken | null } = {};
     
     for (const provider of providers) {
@@ -149,7 +147,7 @@ export default function GlobalSettings({ isOpen, onClose, initialTab = 'general'
     setTokens(newTokens);
   }, []);
 
-  const handleServiceClick = (provider: 'github' | 'supabase' | 'vercel') => {
+  const handleServiceClick = (provider: 'github') => {
     setSelectedProvider(provider);
     setServiceModalOpen(true);
   };
@@ -751,7 +749,7 @@ export default function GlobalSettings({ isOpen, onClose, initialTab = 'general'
                 <div className="bg-gray-50 rounded-xl border border-gray-200 p-6 space-y-4">
                   <div className="text-center">
                     <p className="text-base text-gray-700 leading-relaxed max-w-2xl mx-auto">
-                      Claudable is an AI-powered development platform that integrates with GitHub, Supabase, and Vercel 
+                      Claudable is an AI-powered development platform that integrates with GitHub and internal tooling 
                       to streamline your web development workflow.
                     </p>
                   </div>

@@ -161,13 +161,12 @@ model ProjectServiceConnection {
   projectId String   @map("project_id")
 
   // Service info
-  provider     String // github, vercel, supabase
+  provider     String // github, internal_db, other internal services
   status       String @default("connected") // connected, disconnected, error
 
   // Service data (JSON)
   // GitHub: { repo_url, repo_name, default_branch }
-  // Vercel: { deployment_url, project_id, auto_deploy }
-  // Supabase: { project_url, project_id, database_name }
+  // internal_db: { host, port, database_name, username, database_url }
   serviceData  String @map("service_data")
 
   // Timestamps

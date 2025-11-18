@@ -72,6 +72,7 @@ export async function POST(_request: NextRequest, { params }: RouteContext) {
           port: deployment.port,
           status: deployment.status,
           internalUrl: deployment.url,
+          externalUrl: deployment.externalUrl,
         },
         envPath,
       },

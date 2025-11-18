@@ -254,11 +254,7 @@ export default function ChatPage() {
   const [showPublishPanel, setShowPublishPanel] = useState(false);
   const [publishLoading, setPublishLoading] = useState(false);
   const [githubConnected, setGithubConnected] = useState<boolean | null>(null);
-  const [vercelConnected, setVercelConnected] = useState<boolean | null>(null);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
-  const [deploymentId, setDeploymentId] = useState<string | null>(null);
-  const [deploymentStatus, setDeploymentStatus] = useState<'idle' | 'deploying' | 'ready' | 'error'>('idle');
-  const deployPollRef = useRef<NodeJS.Timeout | null>(null);
   const [isStartingPreview, setIsStartingPreview] = useState(false);
   const [previewInitializationMessage, setPreviewInitializationMessage] = useState('Starting development server...');
   const [cliStatuses, setCliStatuses] = useState<Record<string, CliStatusSnapshot>>({});
@@ -599,41 +595,17 @@ const persistProjectPreferences = useCallback(
       if (response.ok) {
         const connections = await response.json();
         const githubConnection = connections.find((conn: any) => conn.provider === 'github');
-        const vercelConnection = connections.find((conn: any) => conn.provider === 'vercel');
-        
-        // Check actual project connections (not just token existence)
         setGithubConnected(!!githubConnection);
-        setVercelConnected(!!vercelConnection);
-        
-        // Set published URL only if actually deployed
-        if (vercelConnection && vercelConnection.service_data) {
-          const sd = vercelConnection.service_data;
-          // Only use actual deployment URLs, not predicted ones
-          const rawUrl = sd.last_deployment_url || null;
-          const url = rawUrl ? (String(rawUrl).startsWith('http') ? String(rawUrl) : `https://${rawUrl}`) : null;
-          setPublishedUrl(url || null);
-          if (url) {
-            setDeploymentStatus('ready');
-          } else {
-            setDeploymentStatus('idle');
-          }
-        } else {
-          setPublishedUrl(null);
-          setDeploymentStatus('idle');
-        }
+        setPublishedUrl(null);
       } else {
         setGithubConnected(false);
-        setVercelConnected(false);
         setPublishedUrl(null);
-        setDeploymentStatus('idle');
       }
 
     } catch (e) {
       console.warn('Failed to load deploy status', e);
       setGithubConnected(false);
-      setVercelConnected(false);
       setPublishedUrl(null);
-      setDeploymentStatus('idle');
     }
   }, [projectId]);
 

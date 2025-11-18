@@ -338,7 +338,14 @@ export default function HomePage() {
         showToast('Failed to deploy project', 'error');
         return;
       }
-      showToast('Project deployment started', 'success');
+      const payload = await response.json().catch(() => null);
+      const externalUrl = payload?.data?.deployment?.externalUrl as string | undefined;
+      if (externalUrl) {
+        showToast('Project deployed. Opening live app...', 'success');
+        window.open(externalUrl, '_blank');
+      } else {
+        showToast('Project deployment started', 'success');
+      }
     } catch (error) {
       console.warn('Failed to deploy project:', error);
       showToast('Failed to deploy project. Please try again.', 'error');

@@ -7,6 +7,7 @@ export interface DeploymentInfo {
   port: number;
   status: string;
   url: string | null;
+  externalUrl: string | null;
 }
 
 const sanitizeForSubdomain = (value: string, prefix: string, maxLength = 50): string => {
@@ -20,6 +21,19 @@ const sanitizeForSubdomain = (value: string, prefix: string, maxLength = 50): st
 
 export const computeProjectSubdomain = (projectId: string): string => {
   return sanitizeForSubdomain(projectId, 'proj-');
+};
+
+const getAppsBaseDomain = (): string | null => {
+  const raw = process.env.APPS_BASE_DOMAIN;
+  if (!raw || !raw.trim()) return null;
+  return raw.replace(/^https?:\/\//, '').trim();
+};
+
+const buildExternalUrl = (subdomain: string): string | null => {
+  const baseDomain = getAppsBaseDomain();
+  if (!baseDomain) return null;
+  const host = `${subdomain}.${baseDomain}`;
+  return `https://${host}`;
 };
 
 export async function deployProjectApp(projectId: string): Promise<DeploymentInfo> {
@@ -60,6 +74,7 @@ export async function deployProjectApp(projectId: string): Promise<DeploymentInf
     port,
     status,
     url,
+    externalUrl: buildExternalUrl(subdomain),
   };
 }
 
@@ -76,6 +91,6 @@ export async function getDeploymentForProject(projectId: string): Promise<Deploy
     port: deployment.port,
     status: deployment.status,
     url: null,
+    externalUrl: buildExternalUrl(deployment.subdomain),
   };
 }
-
